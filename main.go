@@ -12,14 +12,21 @@ import (
 )
 
 type Object struct {
-	Kind string `json:"object_kind"`
+	Kind       string `json:"object_kind"`
+	Attributes struct {
+		ID     int    `json:"iid"`
+		Title  string `json:"title"`
+		Action string `json:"action"`
+	} `json:"object_attributes"`
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	var object Object
-	_ = json.NewDecoder(r.Body).Decode(&object)
-	w.WriteHeader(http.StatusOK)
-	fmt.Printf("%s \"%s\" %s\n", r.RemoteAddr, r.Header.Get("X-Gitlab-Event"), object.Kind)
+	if r.Header.Get("X-Gitlab-Event") == "Issue Hook" {
+		var object Object
+		_ = json.NewDecoder(r.Body).Decode(&object)
+		w.WriteHeader(http.StatusOK)
+		fmt.Printf("%v %v %v: %v\n", object.Kind, object.Attributes.ID, object.Attributes.Action, object.Attributes.Title)
+	}
 }
 
 func main() {
