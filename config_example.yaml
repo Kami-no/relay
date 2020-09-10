@@ -1,0 +1,2 @@
+---
+endpoint: "https://push.example.de/message?token=<apptoken>"

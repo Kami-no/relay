@@ -1,17 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
-type Object struct {
+type Issue struct {
 	Kind       string `json:"object_kind"`
 	Attributes struct {
 		ID     int    `json:"iid"`
@@ -20,12 +24,73 @@ type Object struct {
 	} `json:"object_attributes"`
 }
 
+type Gotify struct {
+	Title    string `json:"title"`
+	Message  string `json:"message"`
+	Priority int    `json:"priority"`
+}
+
+type config struct {
+	Endpoint string `json:"endpoint"`
+}
+
+func (c *config) getConfig() *config {
+
+	yamlFile, err := ioutil.ReadFile("config.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	return c
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-Gitlab-Event") == "Issue Hook" {
-		var object Object
-		_ = json.NewDecoder(r.Body).Decode(&object)
+		var issue Issue
+		_ = json.NewDecoder(r.Body).Decode(&issue)
 		w.WriteHeader(http.StatusOK)
-		fmt.Printf("%v %v %v: %v\n", object.Kind, object.Attributes.ID, object.Attributes.Action, object.Attributes.Title)
+
+		log.Printf("%v %v %v: %v\n",
+			issue.Kind,
+			issue.Attributes.ID,
+			issue.Attributes.Action,
+			issue.Attributes.Title)
+
+		var gotify Gotify
+		gotify.Title = fmt.Sprintf("%v %v %v",
+			issue.Kind,
+			issue.Attributes.ID,
+			issue.Attributes.Action)
+
+		gotify.Message = fmt.Sprint(issue.Attributes.Title)
+
+		if issue.Attributes.Action == "update" {
+			gotify.Priority = 0
+		} else {
+			gotify.Priority = 5
+		}
+
+		requestBody, err := json.Marshal(gotify)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		var cfg config
+		cfg.getConfig()
+
+		resp, err := http.Post(
+			cfg.Endpoint,
+			"application/json",
+			bytes.NewBuffer(requestBody))
+		if err != nil {
+			log.Println(err)
+		}
+		defer resp.Body.Close()
 	}
 }
 

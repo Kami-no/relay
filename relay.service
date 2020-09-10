@@ -1,0 +1,11 @@
+[Unit]
+Description=GitLab Relay
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/relay
+ExecStart=/opt/relay/relay
+
+[Install]
+WantedBy=multi-user.target
