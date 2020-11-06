@@ -1,2 +1,9 @@
 ---
-endpoint: "https://push.example.de/message?token=<apptoken>"
+direction: "gotify"
+gotify: "https://push.example.de/message?token=<apptoken>"
+espace:
+  url: ""
+  tenant: ""
+  app: ""
+  theme: ""
+  rcpt: ""
