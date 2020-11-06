@@ -26,15 +26,15 @@ type eResponse struct {
 	Data    string `json:"data"`
 }
 
-func Send(title string, content string, url string) error {
+func Send(rcpt string, title string, content string, url string) error {
 	var espace eSpace
 
 	espaceURL := config.Cfg.ESpace.URL
 	espace.Tenant = config.Cfg.ESpace.Tenant
 	espace.App = config.Cfg.ESpace.App
 	espace.Theme = config.Cfg.ESpace.Theme
-	espace.Rcpt = config.Cfg.ESpace.Rcpt
 
+	espace.Rcpt = rcpt
 	espace.Title = title
 	espace.Content = content
 	espace.URL = url

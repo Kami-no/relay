@@ -53,8 +53,9 @@ func HIssue(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			if issue.Attributes.Action == "open" {
+				rcpt := config.Cfg.ESpace.Rcpt
 				url := issue.Attributes.URL
-				err := espace.Send(title, message, url)
+				err := espace.Send(rcpt, title, message, url)
 				if err != nil {
 					log.Println(err)
 				}
